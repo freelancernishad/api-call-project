@@ -6,7 +6,7 @@ use App\Models\ApiToken;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-
+use GuzzleHttp\Client;
 function apiLogin($email,$password,$token){
 
 
@@ -85,4 +85,21 @@ return $data = [
         $fileContents = file_get_contents($url);
          Storage::disk('local')->put($filename, $fileContents);
          return $returnFilename;
+    }
+
+    function imageBase64($url){
+
+
+        $client = new Client();
+        $response = $client->get($url);
+
+         $extArray =  pathinfo($url, PATHINFO_EXTENSION);
+         $extArrayExplode = explode('?',$extArray);
+         $extCount =  count($extArrayExplode);
+        if($extCount>1){
+            $ext = $extArrayExplode[0];
+        }else{
+            $ext = $extArray;
+        }
+      return   $photoUrl = "data:image/$ext;base64,".base64_encode($response->getBody()->getContents());
     }

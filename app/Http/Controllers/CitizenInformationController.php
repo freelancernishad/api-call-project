@@ -40,7 +40,7 @@ class CitizenInformationController extends Controller
 
 
 
-          return env('PRODUCTION_URL').$informations->photoUrl;
+          $informations['photoUrl'] = imageBase64(env('PRODUCTION_URL').$informations->photoUrl);
 
 
         //   $informations->update(['photoUrl'=>$photoUrl]);
@@ -201,6 +201,7 @@ class CitizenInformationController extends Controller
         }
 
         $informations =   CitizenInformation::where(['nationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->first();
+        $informations['photoUrl'] = imageBase64(env('PRODUCTION_URL').$informations->photoUrl);
         $responseData = [
             'informations'=>$informations,
             'type'=>'NID',
