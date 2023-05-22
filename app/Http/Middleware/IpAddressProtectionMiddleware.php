@@ -13,16 +13,12 @@ class IpAddressProtectionMiddleware
         'https://msronytraders.com',
         'http://test.localhost:8000',
         'https://test.uniontax.gov.bd',
-        // Add more IP addresses as needed
     ];
 
 
     public function handle($request, Closure $next)
     {
-
-
        $requestIP = $request->header('Origin');
-
         if (!in_array($requestIP, $this->allowedIPs)) {
             return response()->json([
                 'message' => 'Access denied. Your IP is not allowed.',
