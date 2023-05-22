@@ -15,7 +15,6 @@ class CitizenInformationController extends Controller
     public function citizeninformationNID(Request $request)
     {
 
-        // $url = 'https://prportal.nidw.gov.bd/file-60/4/a/5/a404e40b-4740-4ee2-9f36-e8a2fba4665b/Photo-a404e40b-4740-4ee2-9f36-e8a2fba4665b.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=fileobj%2F20230521%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20230521T080549Z&X-Amz-Expires=120&X-Amz-SignedHeaders=host&X-Amz-Signature=a3a1a48b2e17c5f2a2b97f4aabb7d711415bd47a73a5899690edb99f8be089c5';
 
 
 
@@ -33,20 +32,27 @@ class CitizenInformationController extends Controller
 
 
 
-        $idcheck = CitizenInformation::where(['nationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->count();
+        $Oldidcheck = CitizenInformation::where(['oldNationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->count();
 
+
+
+        if($Oldidcheck>0){
+          $informations = CitizenInformation::where(['oldNationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->first();
+          $informations['photoUrl'] = imageBase64('storage/app/public/'.$informations->photoUrl);
+          $responseData = [
+            'informations'=>$informations,
+            'type'=>'NID',
+            'message'=>'found',
+            'status'=>200,
+          ];
+          return $responseData;
+        }
+
+
+        $idcheck = CitizenInformation::where(['nationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->count();
         if($idcheck>0){
           $informations = CitizenInformation::where(['nationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->first();
-
-
-
           $informations['photoUrl'] = imageBase64('storage/app/public/'.$informations->photoUrl);
-
-
-        //   $informations->update(['photoUrl'=>$photoUrl]);
-
-
-
           $responseData = [
             'informations'=>$informations,
             'type'=>'NID',
@@ -55,6 +61,18 @@ class CitizenInformationController extends Controller
           ];
           return $responseData;
         }else{
+
+
+            $oldidcheckForNid = CitizenInformation::where(['oldNationalIdNumber'=>$nationalIdNumber])->count();
+            if($oldidcheckForNid>0){
+                $responseData = [
+                    'informations'=>[],
+                    'type'=>'NID',
+                    'message'=>'invaild dateOfBirth',
+                    'status'=>301,
+                  ];
+                  return $responseData;
+            }
 
 
             $idcheckForNid = CitizenInformation::where(['nationalIdNumber'=>$nationalIdNumber])->count();
@@ -69,15 +87,12 @@ class CitizenInformationController extends Controller
             }
 
 
-
-
             $requestBody = '{
                 "nidNumber": "'.$nationalIdNumber.'",
                 "dateOfBirth": "'.$dateOfBirth.'",
                 "englishTranslation": true
               }';
               $curl = curl_init();
-
               curl_setopt_array($curl, array(
                 // CURLOPT_URL => 'https://api.porichoybd.com/sandbox-api/v2/verifications/autofill',
                 CURLOPT_URL => 'https://api.porichoybd.com/api/v2/verifications/autofill',
@@ -94,13 +109,9 @@ class CitizenInformationController extends Controller
                   'x-api-key: c4cc8c32-161c-496c-adfb-16eeed4607ad'
                 ),
               ));
-
-               $response = curl_exec($curl);
-
-              curl_close($curl);
-
-             $response = json_decode($response);
-
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $response = json_decode($response);
             if($response->status=='NO'){
                 $responseData = [
                     'informations'=>[],
@@ -112,30 +123,20 @@ class CitizenInformationController extends Controller
             }elseif($response->status=='YES'){
                 $NidInfo = (array)$response->data->nid;
                 $NidInfo['dateOfBirth'] = $dateOfBirth;
-
-               $CitizenInformation =  CitizenInformation::create($NidInfo);
-
-
+                $CitizenInformation =  CitizenInformation::create($NidInfo);
                 $presentAddressBNArray =  explode(", ",$response->data->nid->presentAddressBN);
                 $presentAddressBNArrayCount = count($presentAddressBNArray);
                 if($presentAddressBNArrayCount>5){
-                 $presentHoldingArray = explode(':',$presentAddressBNArray[0]);
+                $presentHoldingArray = explode(':',$presentAddressBNArray[0]);
                 $NidInfo['presentHolding'] = $presentHoldingArray[1];
-
-                 $presentVillageArray = explode(':',$presentAddressBNArray[1]);
+                $presentVillageArray = explode(':',$presentAddressBNArray[1]);
                 $NidInfo['presentVillage'] = $presentVillageArray[1];
-
                 $NidInfo['presentUnion'] = $presentAddressBNArray[2];
-
                 $presentPostArray = explode(':',$presentAddressBNArray[3]);
-               $presentPostArray = explode('-',$presentPostArray[1]);
-
-
+                $presentPostArray = explode('-',$presentPostArray[1]);
                 $NidInfo['presentPost'] = ltrim($presentPostArray[0]);
                 $NidInfo['presentPostCode'] = $presentPostArray[1];
-
                 $NidInfo['presentThana'] = $presentAddressBNArray[4];
-
                 $NidInfo['presentThana'] = $presentAddressBNArray[4];
                 $NidInfo['presentDistrict'] = $presentAddressBNArray[5];
                 }
