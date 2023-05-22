@@ -76,11 +76,12 @@ return $data = [
         $randomString = Str::random(10);
         $extension = pathinfo($url, PATHINFO_EXTENSION);
         if(!$extension){
-            $extension = '.jpg';
+            $extension = 'jpg';
         }
-        $filename = time() . '_' . $randomString . '.' . $extension;
-        $filename = "public/$FileYear/$FileMonth/$FileDate/$filename";
-        $returnFilename = "$FileYear/$FileMonth/$FileDate/$filename";
+        $filenameWithEx = time() . '_' . $randomString . '.' . $extension;
+        $filename = "public/$FileYear/$FileMonth/$FileDate/$filenameWithEx";
+
+        $returnFilename = "$FileYear/$FileMonth/$FileDate/$filenameWithEx";
 
         $fileContents = file_get_contents($url);
          Storage::disk('local')->put($filename, $fileContents);
