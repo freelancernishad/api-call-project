@@ -201,7 +201,17 @@ class CitizenInformationController extends Controller
 
         }
 
-        $informations =   CitizenInformation::where(['nationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->first();
+
+        // $nationalIdNumberCount =   CitizenInformation::where(['nationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->count();
+        $oldNationalIdNumberCount =   CitizenInformation::where(['oldNationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->count();
+
+        if($oldNationalIdNumberCount>0){
+            $informations =   CitizenInformation::where(['oldNationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->first();
+        }else{
+            $informations =   CitizenInformation::where(['nationalIdNumber'=>$nationalIdNumber,'dateOfBirth'=>$dateOfBirth])->first();
+        }
+
+
         $informations['photoUrl'] = imageBase64('storage/app/public/'.$informations->photoUrl);
         $responseData = [
             'informations'=>$informations,
