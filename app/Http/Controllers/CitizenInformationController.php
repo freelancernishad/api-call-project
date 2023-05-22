@@ -23,6 +23,7 @@ class CitizenInformationController extends Controller
 
         if($loginStatus['status']!=200){
             return $loginStatus;
+
         }
 
 
