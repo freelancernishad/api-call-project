@@ -11,7 +11,7 @@ class IpAddressProtectionMiddleware
     protected $allowedIPs = [
         '',
         'https://msronytraders.com',
-        'http://localhost',
+        'http://test.localhost:8000',
         'https://test.uniontax.gov.bd',
         // Add more IP addresses as needed
     ];
