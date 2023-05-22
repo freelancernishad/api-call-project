@@ -6,23 +6,27 @@ use Closure;
 
 class IpAddressProtectionMiddleware
 {
+
+
+    protected $allowedIPs = [
+        '',
+        'https://msronytraders.com',
+        'http://localhost',
+        'https://test.uniontax.gov.bd',
+        // Add more IP addresses as needed
+    ];
+
+
     public function handle($request, Closure $next)
     {
-        // Define the allowed IP addresses
-        $allowedIps = ['127.0.0.1', '192.168.0.1'];
 
-        // Define the allowed domain names
-        $allowedDomains = ['example.com', 'api.example.com'];
 
-        // Get the client's IP address and domain name
-        $clientIp = $request->ip();
-        $clientDomain = $request->getHost();
+       $requestIP = $request->header('Origin');
 
-        // Check if the client IP or domain is allowed
-        if (!in_array($clientIp, $allowedIps) && !in_array($clientDomain, $allowedDomains)) {
+        if (!in_array($requestIP, $this->allowedIPs)) {
             return response()->json([
-                'message' => 'You are not authorized ip or domain',
-            ], 401);
+                'message' => 'Access denied. Your IP is not allowed.',
+            ], 403);
         }
 
         return $next($request);

@@ -22,9 +22,9 @@ class CitizenInformationController extends Controller
         $token = $request->sToken;
         $loginStatus =  apiLogin('freelancernishad123@gmail.com','12345678',$token);
 
-        if($loginStatus['status']!=200){
-            return $loginStatus;
-        }
+        // if($loginStatus['status']!=200){
+        //     return $loginStatus;
+        // }
 
 
         $nationalIdNumber = $request->nidNumber;
@@ -40,6 +40,7 @@ class CitizenInformationController extends Controller
 
 
 
+          return env('PRODUCTION_URL').$informations->photoUrl;
 
 
         //   $informations->update(['photoUrl'=>$photoUrl]);
