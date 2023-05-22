@@ -89,17 +89,12 @@ return $data = [
 
     function imageBase64($url){
 
+        $imageContent = file_get_contents($url);
 
-        $client = new Client();
-        $response = $client->get($url);
+$extension = pathinfo($url, PATHINFO_EXTENSION);
+$base64Image = base64_encode($imageContent);
 
-         $extArray =  pathinfo($url, PATHINFO_EXTENSION);
-         $extArrayExplode = explode('?',$extArray);
-         $extCount =  count($extArrayExplode);
-        if($extCount>1){
-            $ext = $extArrayExplode[0];
-        }else{
-            $ext = $extArray;
-        }
-      return   $photoUrl = "data:image/$ext;base64,".base64_encode($response->getBody()->getContents());
+
+return $base64Url = "data:image/$extension;base64," . $base64Image;
+
     }
