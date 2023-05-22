@@ -13,6 +13,11 @@ class IpAddressProtectionMiddleware
         'https://msronytraders.com',
         'http://test.localhost:8000',
         'https://test.uniontax.gov.bd',
+        //pouroseba.gov.bd
+        'https://boda.pouroseba.gov.bd',
+        'https://debiganj.pouroseba.gov.bd',
+        'https://panchagarh.pouroseba.gov.bd',
+        'https://test.pouroseba.gov.bd',
     ];
 
 
