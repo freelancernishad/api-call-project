@@ -113,6 +113,7 @@ class CitizenInformationController extends Controller
             $response = curl_exec($curl);
             curl_close($curl);
             $response = json_decode($response);
+
             if($response->status=='NO'){
                 $responseData = [
                     'informations'=>[],
@@ -233,14 +234,46 @@ class CitizenInformationController extends Controller
 
     public function citizeninformationBRN(Request $request)
     {
-        // return $request->all();
+        $token = $request->sToken;
+        $loginStatus =  apiLogin('freelancernishad123@gmail.com','12345678',$token);
+
+        if($loginStatus['status']!=200){
+            return $loginStatus;
+        }
+
+
 
         $birthRegistrationNumber = $request->nidNumber;
         $dateOfBirth = date('Y-m-d',strtotime($request->dateOfBirth));
+
+
         $idcheck = CitizenInformation::where(['birthRegistrationNumber'=>$birthRegistrationNumber,'dateOfBirth'=>$dateOfBirth])->count();
+
         if($idcheck>0){
-          return  CitizenInformation::where(['birthRegistrationNumber'=>$birthRegistrationNumber,'dateOfBirth'=>$dateOfBirth])->first();
+          $informations =  CitizenInformation::where(['birthRegistrationNumber'=>$birthRegistrationNumber,'dateOfBirth'=>$dateOfBirth])->first();
+
+          $responseData = [
+            'informations'=>$informations,
+            'type'=>'DOB',
+            'message'=>'found',
+            'status'=>200,
+          ];
+          return $responseData;
+
         }else{
+
+            $idcheckForNid = CitizenInformation::where(['birthRegistrationNumber'=>$birthRegistrationNumber])->count();
+            if($idcheckForNid>0){
+                $responseData = [
+                    'informations'=>[],
+                    'type'=>'DOB',
+                    'message'=>'invaild dateOfBirth',
+                    'status'=>301,
+                  ];
+                  return $responseData;
+            }
+
+
             $requestBody = '{
                 "birthRegistrationNumber": "'.$birthRegistrationNumber.'",
                 "dateOfBirth": "'.$dateOfBirth.'"
@@ -249,7 +282,7 @@ class CitizenInformationController extends Controller
                 $curl = curl_init();
 
                 curl_setopt_array($curl, array(
-                CURLOPT_URL => 'https://api.porichoybd.com/api/v1/verifications/autofill',
+                CURLOPT_URL => 'https://api.porichoybd.com/api​/v1/verifications/autofill',
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
@@ -259,8 +292,8 @@ class CitizenInformationController extends Controller
                 CURLOPT_CUSTOMREQUEST => 'POST',
                 CURLOPT_POSTFIELDS =>$requestBody,
                 CURLOPT_HTTPHEADER => array(
-                    'x-api-key: c4cc8c32-161c-496c-adfb-16eeed4607ad',
-                    'Content-Type: application/json'
+                    'Content-Type: application/json',
+                    'x-api-key: c4cc8c32-161c-496c-adfb-16eeed4607ad'
                 ),
                 ));
 
@@ -270,14 +303,107 @@ class CitizenInformationController extends Controller
 
 
             $response = json_decode($response);
+            if($response->status=='NO'){
+                $responseData = [
+                    'informations'=>[],
+                    'type'=>'DOB',
+                    'message'=>'not-found',
+                    'status'=>404,
+                  ];
+                  return $responseData;
+            }elseif($response->status=='YES'){
 
-            $NidInfo = (array)$response->data->birthRegistration;
-            $NidInfo['dateOfBirth'] = $dateOfBirth;
-            $NidInfo['birthRegistrationNumber'] = $birthRegistrationNumber;
-            CitizenInformation::create($NidInfo);
+                $NidInfo = (array)$response->data->birthRegistration;
+                $NidInfo['dateOfBirth'] = $dateOfBirth;
+                $NidInfo['birthRegistrationNumber'] = $birthRegistrationNumber;
+                $CitizenInformation =  CitizenInformation::create($NidInfo);
+
+
+
+
+
+
+                // $presentAddressBNArray =  explode(", ",$response->data->nid->presentAddressBN);
+                // $presentAddressBNArrayCount = count($presentAddressBNArray);
+                // if($presentAddressBNArrayCount>5){
+                // $presentHoldingArray = explode(':',$presentAddressBNArray[0]);
+                // $NidInfo['presentHolding'] = $presentHoldingArray[1];
+                // $presentVillageArray = explode(':',$presentAddressBNArray[1]);
+                // $NidInfo['presentVillage'] = $presentVillageArray[1];
+                // $NidInfo['presentUnion'] = $presentAddressBNArray[2];
+                // $presentPostArray = explode(':',$presentAddressBNArray[3]);
+                // $presentPostArray = explode('-',$presentPostArray[1]);
+                // $NidInfo['presentPost'] = ltrim($presentPostArray[0]);
+                // $NidInfo['presentPostCode'] = $presentPostArray[1];
+                // $NidInfo['presentThana'] = $presentAddressBNArray[4];
+                // $NidInfo['presentThana'] = $presentAddressBNArray[4];
+                // $NidInfo['presentDistrict'] = $presentAddressBNArray[5];
+                // }
+
+                // $permanentAddressArray =  explode(", ",$response->data->nid->permanentAddressBN);
+                // $permanentAddressArrayCount = count($permanentAddressArray);
+                // if($permanentAddressArrayCount>5){
+                //  $permanentHoldingArray = explode(':',$permanentAddressArray[0]);
+                // $NidInfo['permanentHolding'] = $permanentHoldingArray[1];
+
+                //  $permanentVillageArray = explode(':',$permanentAddressArray[1]);
+                // $NidInfo['permanentVillage'] = $permanentVillageArray[1];
+
+                // $NidInfo['permanentUnion'] = $permanentAddressArray[2];
+
+                // $permanentPostArray = explode(':',$permanentAddressArray[3]);
+                // $permanentPostArray = explode('-',$permanentPostArray[1]);
+                // $NidInfo['permanentPost'] = ltrim($permanentPostArray[0]);
+                // $NidInfo['permanentPostCode'] = $permanentPostArray[1];
+
+                // $NidInfo['permanentThana'] = $permanentAddressArray[4];
+                // $NidInfo['permanentDistrict'] = $permanentAddressArray[5];
+                // }
+
+                // $url = $response->data->nid->photoUrl; // replace with your image URL
+
+
+                // $client = new Client();
+                // $response = $client->get($url);
+
+                //  $extArray =  pathinfo($url, PATHINFO_EXTENSION);
+                //  $extArrayExplode = explode('?',$extArray);
+                //  $extCount =  count($extArrayExplode);
+                // if($extCount>1){
+                //     $ext = $extArrayExplode[0];
+                // }else{
+                //     $ext = $extArray;
+                // }
+                // $photoUrl = "data:image/$ext;base64,".base64_encode($response->getBody()->getContents());
+
+                //  $photoUrl= nidImageSave($photoUrl);
+                // $extArrayExplode = explode('?',$photoUrl);
+                //  $extCount =  count($extArrayExplode);
+                // if($extCount>1){
+                //     $photoUrl = $extArrayExplode[0];
+                // }else{
+                //     $photoUrl = $extArrayExplode[0];
+                // }
+                // $NidInfo['photoUrl'] =  $photoUrl;
+
+
+                // $CitizenInformation->update($NidInfo);
+
+
+            }
+
+
+
         }
 
-        return  CitizenInformation::where(['birthRegistrationNumber'=>$birthRegistrationNumber,'dateOfBirth'=>$dateOfBirth])->first();
+        $informations =   CitizenInformation::where(['birthRegistrationNumber'=>$birthRegistrationNumber,'dateOfBirth'=>$dateOfBirth])->first();
+        $responseData = [
+            'informations'=>$informations,
+            'type'=>'NID',
+            'message'=>'found',
+            'status'=>200,
+          ];
+          return $responseData;
 
 
     }
