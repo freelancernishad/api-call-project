@@ -68,6 +68,19 @@ class IpAddressProtectionMiddleware
         'https://debiganj.pouroseba.gov.bd',
         'https://panchagarh.pouroseba.gov.bd',
         'https://test.pouroseba.gov.bd',
+
+        // https://uzpseba.gov.bd/
+        'https://uzpseba.gov.bd',
+        'https://panchagarh.uzpseba.gov.bd',
+        'https://debiganj.uzpseba.gov.bd',
+        'https://boda.uzpseba.gov.bd',
+        'https://atwari.uzpseba.gov.bd',
+        'https://tetulia.uzpseba.gov.bd',
+
+
+
+
+
     ];
 
 

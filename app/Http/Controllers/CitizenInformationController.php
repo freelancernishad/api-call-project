@@ -541,3 +541,18 @@ class CitizenInformationController extends Controller
 //     "photoUrl": "https://prportal.nidw.gov.bd/file-1f/d/b/9/82fdaaa7-b2eb-48bc-a041-71a19507f528/Photo-82fdaaa7-b2eb-48bc-a041-71a19507f528.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=fileobj%2F20230401%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20230401T044812Z&X-Amz-Expires=120&X-Amz-SignedHeaders=host&X-Amz-Signature=e0f825578c006ee9ad9412db051f6bafa396debee5f05cb8d1674372d6520ff1"
 // }
 
+
+
+
+// {
+//     "transactionId": "74084e74-d732-44d4-ad29-1930ef4bc17c",
+//     "creditCost": 0,
+//     "creditCurrent": 0,
+//     "data": {},
+//     "errors": [
+//         {
+//             "code": "Validation:NoCredit",
+//             "message": "You have 0"
+//         }
+//     ]
+// }
