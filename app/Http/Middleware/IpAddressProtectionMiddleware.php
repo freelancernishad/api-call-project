@@ -12,6 +12,8 @@ class IpAddressProtectionMiddleware
         '',
         'https://msronytraders.com',
         'http://test.localhost:8000',
+        'https://amardesh.xyz',
+        'http://amardesh.xyz',
         //uniontax.gov.bd
         'https://alowakhowa.uniontax.gov.bd',
         'https://amarkhana.uniontax.gov.bd',
