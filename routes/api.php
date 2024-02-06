@@ -40,6 +40,7 @@ Route::middleware('ipProtection')->group(function () {
 
 Route::post('citizen/information/nid', [CitizenInformationController::class,'citizeninformationNID']);
 Route::post('citizen/information/brn', [CitizenInformationController::class,'citizeninformationBRN']);
+Route::post('main/balance', [CitizenInformationController::class,'orgInfo']);
 
 
 
