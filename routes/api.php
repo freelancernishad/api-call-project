@@ -8,13 +8,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CitizenInformationController;
 use Illuminate\Http\Request;
 
+Route::get('/user', function (Request $request) {
+
+    return  $request->header('Origin');
+
+
+
+       });
 Route::middleware('ipProtection')->group(function () {
-
-    Route::get('/user', function (Request $request) {
-
-
-
-    });
 
 
 
