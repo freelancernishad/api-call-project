@@ -158,17 +158,21 @@ return $response;
                 if($presentAddressBNArrayCount>6){
                     $presentHoldingArray = explode(':',$presentAddressBNArray[0]);
                     $NidInfo['presentHolding'] = $presentHoldingArray[1];
-                    $presentVillageArray = explode(':',$presentAddressBNArray[1]);
-                    $NidInfo['presentVillage'] = $presentVillageArray[1];
-                    $NidInfo['presentUnion'] = $presentAddressBNArray[2];
+                    // $presentVillageArray = explode(':',$presentAddressBNArray[1]);
+                    $NidInfo['presentVillage'] = $presentAddressBNArray[1];
                     $presentPostArray = explode(':',$presentAddressBNArray[4]);
+                    $NidInfo['presentUnion'] = $presentPostArray[1];
                     $presentPostArray = explode('-',$presentPostArray[1]);
-
                     $NidInfo['presentPost'] = ltrim($presentPostArray[0]);
                     $NidInfo['presentPostCode'] = $presentPostArray[1];
                     $NidInfo['presentThana'] = $presentAddressBNArray[5];
                     $NidInfo['presentDistrict'] = $presentAddressBNArray[6];
-                }elseif($presentAddressBNArrayCount>5){
+
+
+                }
+     
+                
+                elseif($presentAddressBNArrayCount>5){
                     $presentHoldingArray = explode(':',$presentAddressBNArray[0]);
                     $NidInfo['presentHolding'] = $presentHoldingArray[1];
                     $presentVillageArray = explode(':',$presentAddressBNArray[1]);
@@ -214,7 +218,7 @@ return $response;
                      $permanentVillageArray = explode(':',$permanentAddressArray[1]);
                     $NidInfo['permanentVillage'] = $permanentVillageArray[1];
 
-     
+
 
                     $NidInfo['permanentUnion'] = $permanentAddressArray[2];
 
