@@ -153,37 +153,35 @@ return $response;
                 $CitizenInformation =  CitizenInformation::create($NidInfo);
                 $presentAddressBNArray =  explode(", ",$response->data->nid->presentAddressBN);
                 $presentAddressBNArrayCount = count($presentAddressBNArray);
-                if($presentAddressBNArrayCount>5){
-                $presentHoldingArray = explode(':',$presentAddressBNArray[0]);
-                $NidInfo['presentHolding'] = $presentHoldingArray[1];
-                $presentVillageArray = explode(':',$presentAddressBNArray[1]);
-                $NidInfo['presentVillage'] = $presentVillageArray[1];
-                $NidInfo['presentUnion'] = $presentAddressBNArray[2];
-
-                $presentPostArray = explode(':',$presentAddressBNArray[3]);
-                $presentPostArray = explode('-',$presentPostArray[1]);
-
-                $NidInfo['presentPost'] = ltrim($presentPostArray[0]);
-                $NidInfo['presentPostCode'] = $presentPostArray[1];
-                $NidInfo['presentThana'] = $presentAddressBNArray[4];
-                $NidInfo['presentDistrict'] = $presentAddressBNArray[5];
-                }else
-
 
 
                 if($presentAddressBNArrayCount>6){
-                $presentHoldingArray = explode(':',$presentAddressBNArray[0]);
-                $NidInfo['presentHolding'] = $presentHoldingArray[1];
-                $presentVillageArray = explode(':',$presentAddressBNArray[1]);
-                $NidInfo['presentVillage'] = $presentVillageArray[1];
-                $NidInfo['presentUnion'] = $presentAddressBNArray[2];
-                $presentPostArray = explode(':',$presentAddressBNArray[4]);
-                $presentPostArray = explode('-',$presentPostArray[1]);
-
-                $NidInfo['presentPost'] = ltrim($presentPostArray[0]);
-                $NidInfo['presentPostCode'] = $presentPostArray[1];
-                $NidInfo['presentThana'] = $presentAddressBNArray[5];
-                $NidInfo['presentDistrict'] = $presentAddressBNArray[6];
+                    $presentHoldingArray = explode(':',$presentAddressBNArray[0]);
+                    $NidInfo['presentHolding'] = $presentHoldingArray[1];
+                    $presentVillageArray = explode(':',$presentAddressBNArray[1]);
+                    $NidInfo['presentVillage'] = $presentVillageArray[1];
+                    $NidInfo['presentUnion'] = $presentAddressBNArray[2];
+                    $presentPostArray = explode(':',$presentAddressBNArray[4]);
+                    $presentPostArray = explode('-',$presentPostArray[1]);
+    
+                    $NidInfo['presentPost'] = ltrim($presentPostArray[0]);
+                    $NidInfo['presentPostCode'] = $presentPostArray[1];
+                    $NidInfo['presentThana'] = $presentAddressBNArray[5];
+                    $NidInfo['presentDistrict'] = $presentAddressBNArray[6];
+                }elseif($presentAddressBNArrayCount>5){
+                    $presentHoldingArray = explode(':',$presentAddressBNArray[0]);
+                    $NidInfo['presentHolding'] = $presentHoldingArray[1];
+                    $presentVillageArray = explode(':',$presentAddressBNArray[1]);
+                    $NidInfo['presentVillage'] = $presentVillageArray[1];
+                    $NidInfo['presentUnion'] = $presentAddressBNArray[2];
+    
+                    $presentPostArray = explode(':',$presentAddressBNArray[3]);
+                    $presentPostArray = explode('-',$presentPostArray[1]);
+    
+                    $NidInfo['presentPost'] = ltrim($presentPostArray[0]);
+                    $NidInfo['presentPostCode'] = $presentPostArray[1];
+                    $NidInfo['presentThana'] = $presentAddressBNArray[4];
+                    $NidInfo['presentDistrict'] = $presentAddressBNArray[5];
                 }
 
 
@@ -191,38 +189,41 @@ return $response;
 
                 $permanentAddressArray =  explode(", ",$response->data->nid->permanentAddressBN);
                 $permanentAddressArrayCount = count($permanentAddressArray);
-                if($permanentAddressArrayCount>5){
-                 $permanentHoldingArray = explode(':',$permanentAddressArray[0]);
-                $NidInfo['permanentHolding'] = $permanentHoldingArray[1];
+                if($permanentAddressArrayCount>6){
 
-                 $permanentVillageArray = explode(':',$permanentAddressArray[1]);
-                $NidInfo['permanentVillage'] = $permanentVillageArray[1];
+                    $permanentHoldingArray = explode(':',$permanentAddressArray[0]);
+                    $NidInfo['permanentHolding'] = $permanentHoldingArray[1];
+    
+                     $permanentVillageArray = explode(':',$permanentAddressArray[1]);
+                    $NidInfo['permanentVillage'] = $permanentVillageArray[1];
+    
+                    $NidInfo['permanentUnion'] = $permanentAddressArray[2];
+    
+                    $permanentPostArray = explode(':',$permanentAddressArray[4]);
+                    $permanentPostArray = explode('-',$permanentPostArray[1]);
+                    $NidInfo['permanentPost'] = ltrim($permanentPostArray[0]);
+                    $NidInfo['permanentPostCode'] = $permanentPostArray[1];
+    
+                    $NidInfo['permanentThana'] = $permanentAddressArray[5];
+                    $NidInfo['permanentDistrict'] = $permanentAddressArray[6];
+                }elseif($permanentAddressArrayCount>5){
 
-                $NidInfo['permanentUnion'] = $permanentAddressArray[2];
 
-                $permanentPostArray = explode(':',$permanentAddressArray[3]);
-                $permanentPostArray = explode('-',$permanentPostArray[1]);
-                $NidInfo['permanentPost'] = ltrim($permanentPostArray[0]);
-                $NidInfo['permanentPostCode'] = $permanentPostArray[1];
-
-                $NidInfo['permanentThana'] = $permanentAddressArray[4];
-                $NidInfo['permanentDistrict'] = $permanentAddressArray[5];
-                }elseif($permanentAddressArrayCount>6){
-                 $permanentHoldingArray = explode(':',$permanentAddressArray[0]);
-                $NidInfo['permanentHolding'] = $permanentHoldingArray[1];
-
-                 $permanentVillageArray = explode(':',$permanentAddressArray[1]);
-                $NidInfo['permanentVillage'] = $permanentVillageArray[1];
-
-                $NidInfo['permanentUnion'] = $permanentAddressArray[2];
-
-                $permanentPostArray = explode(':',$permanentAddressArray[4]);
-                $permanentPostArray = explode('-',$permanentPostArray[1]);
-                $NidInfo['permanentPost'] = ltrim($permanentPostArray[0]);
-                $NidInfo['permanentPostCode'] = $permanentPostArray[1];
-
-                $NidInfo['permanentThana'] = $permanentAddressArray[5];
-                $NidInfo['permanentDistrict'] = $permanentAddressArray[6];
+                    $permanentHoldingArray = explode(':',$permanentAddressArray[0]);
+                    $NidInfo['permanentHolding'] = $permanentHoldingArray[1];
+    
+                     $permanentVillageArray = explode(':',$permanentAddressArray[1]);
+                    $NidInfo['permanentVillage'] = $permanentVillageArray[1];
+    
+                    $NidInfo['permanentUnion'] = $permanentAddressArray[2];
+    
+                    $permanentPostArray = explode(':',$permanentAddressArray[3]);
+                    $permanentPostArray = explode('-',$permanentPostArray[1]);
+                    $NidInfo['permanentPost'] = ltrim($permanentPostArray[0]);
+                    $NidInfo['permanentPostCode'] = $permanentPostArray[1];
+    
+                    $NidInfo['permanentThana'] = $permanentAddressArray[4];
+                    $NidInfo['permanentDistrict'] = $permanentAddressArray[5];
                 }
 
                 $url = $response->data->nid->photoUrl; // replace with your image URL
