@@ -2,11 +2,12 @@
 <?php
 
 use App\Models\User;
+use GuzzleHttp\Client;
 use App\Models\ApiToken;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use GuzzleHttp\Client;
 function apiLogin($email,$password,$token){
 
 
@@ -88,14 +89,29 @@ return $data = [
          return $returnFilename;
     }
 
-    function imageBase64($url){
+    function imageBase64($url) {
+        // Check if the file exists
+        if (!file_exists($url)) {
+            // Return a default placeholder or null if the file doesn't exist
+            return null;
+        }
 
-        $imageContent = file_get_contents($url);
+        // Attempt to get the file contents
+        try {
+            $imageContent = file_get_contents($url);
+        } catch (Exception $e) {
+            // Log the error or return null if an exception occurs
+            Log::error("Failed to open stream for $url: " . $e->getMessage());
+            return null;
+        }
 
-$extension = pathinfo($url, PATHINFO_EXTENSION);
-$base64Image = base64_encode($imageContent);
+        // Get the file extension
+        $extension = pathinfo($url, PATHINFO_EXTENSION);
 
+        // Encode the image in base64
+        $base64Image = base64_encode($imageContent);
 
-return $base64Url = "data:image/$extension;base64," . $base64Image;
-
+        // Return the base64 image URL
+        return "data:image/$extension;base64," . $base64Image;
     }
+
