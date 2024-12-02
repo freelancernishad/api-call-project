@@ -6,6 +6,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\CitizenInformation;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class CitizenInformationController extends Controller
@@ -170,8 +171,8 @@ return $response;
 
 
                 }
-     
-                
+
+
                 elseif($presentAddressBNArrayCount>5){
                     $presentHoldingArray = explode(':',$presentAddressBNArray[0]);
                     $NidInfo['presentHolding'] = $presentHoldingArray[1];
@@ -249,35 +250,34 @@ return $response;
                     $NidInfo['permanentDistrict'] = $permanentAddressArray[5];
                 }
 
-                $url = $response->data->nid->photoUrl; // replace with your image URL
-
+                $url = $response->data->nid->photoUrl; // Replace with actual URL
 
                 $client = new Client();
-                $response = $client->get($url);
 
-                 $extArray =  pathinfo($url, PATHINFO_EXTENSION);
-                 $extArrayExplode = explode('?',$extArray);
-                 $extCount =  count($extArrayExplode);
-                if($extCount>1){
-                    $ext = $extArrayExplode[0];
-                }else{
-                    $ext = $extArray;
+                try {
+                    // Get the image content from the URL
+                    $response = $client->get($url);
+                    $imageContent = $response->getBody()->getContents();
+
+                    // Extract the extension from the URL (removing query parameters)
+                    $extArray = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+                    $ext = $extArray ?: 'jpg'; // Default to 'jpg' if extension is not found
+
+                    // Encode the image content as base64
+                    $base64Image = base64_encode($imageContent);
+                    $photoUrl = "data:image/$ext;base64," . $base64Image;
+
+                    // Save the image using the custom function
+                    $savedPath = nidImageSave($photoUrl);
+
+                    // Remove any query parameters from the saved path if they exist
+                    $NidInfo['photoUrl'] = explode('?', $savedPath)[0];
+
+                } catch (\Exception $e) {
+                    // Handle exceptions such as network issues or invalid URL
+                    Log::error('Failed to fetch and save NID image: ' . $e->getMessage());
+                    $NidInfo['photoUrl'] = null; // Handle this gracefully in your app
                 }
-                $photoUrl = "data:image/$ext;base64,".base64_encode($response->getBody()->getContents());
-
-                 $photoUrl= nidImageSave($photoUrl);
-                $extArrayExplode = explode('?',$photoUrl);
-                 $extCount =  count($extArrayExplode);
-                if($extCount>1){
-                    $photoUrl = $extArrayExplode[0];
-                }else{
-                    $photoUrl = $extArrayExplode[0];
-                }
-
-
-
-              //   $NidInfo['photoUrl'] =  fileuploadURL($base64_image,'citizenImage/');
-                $NidInfo['photoUrl'] =  $photoUrl;
 
 
                 $CitizenInformation->update($NidInfo);
