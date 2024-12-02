@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Models\CitizenInformation;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
 
 class CitizenInformationController extends Controller
 {
@@ -256,30 +258,30 @@ return $response;
                     'timeout' => 60, // Timeout in seconds
                     'connect_timeout' => 30, // Connection timeout in seconds
                 ]);
-                
+
                 try {
                     // Try fetching the image
                     $response = $client->get($url);
                     $imageContent = $response->getBody()->getContents();
-                
+
                     // Extract the extension from the URL, default to 'jpg' if not found
                     $extArray = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
-                    $ext = $extArray ?: 'jpg'; 
-                
+                    $ext = $extArray ?: 'jpg';
+
                     // Base64 encode the image
                     $base64Image = base64_encode($imageContent);
                     $photoUrl = "data:image/$ext;base64," . $base64Image;
-                
+
                     // Save the image using the custom function
                     $savedPath = nidImageSave($photoUrl);
-                
+
                     // Remove query parameters if present
                     $NidInfo['photoUrl'] = explode('?', $savedPath)[0];
-                
+
                 } catch (ConnectException | RequestException $e) {
                     // Log the error but ignore saving if a connection error occurs
                     Log::warning('Failed to connect or fetch image: ' . $e->getMessage());
-                    
+
                     // Set a default or null value for photoUrl
                     $NidInfo['photoUrl'] = null; // Or set a placeholder URL if needed
                 }
