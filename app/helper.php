@@ -69,28 +69,28 @@ return $data = [
     }
 
    // Function to save base64 image to storage
-function nidImageSave($base64Image) {
-    $FileYear = date('Y');
-    $FileMonth = date('m');
-    $FileDate = date('d');
-    $randomString = Str::random(10);
-    
-    // Extract the extension from the base64 URL
-    preg_match('/data:image\/(.*?);base64/', $base64Image, $matches);
-    $extension = $matches[1] ?? 'jpg';
+    function nidImageSave($base64Image) {
+        $FileYear = date('Y');
+        $FileMonth = date('m');
+        $FileDate = date('d');
+        $randomString = Str::random(10);
 
-    $filenameWithEx = time() . '_' . $randomString . '.' . $extension;
-    $path = "public/$FileYear/$FileMonth/$FileDate/$filenameWithEx";
-    $returnFilename = "$FileYear/$FileMonth/$FileDate/$filenameWithEx";
+        // Extract the extension from the base64 URL
+        preg_match('/data:image\/(.*?);base64/', $base64Image, $matches);
+        $extension = $matches[1] ?? 'jpg';
 
-    // Decode the base64 content
-    $fileContents = base64_decode(str_replace("data:image/$extension;base64,", '', $base64Image));
-    
-    // Store the image file
-    Storage::put($path, $fileContents);
+        $filenameWithEx = time() . '_' . $randomString . '.' . $extension;
+        $path = "public/$FileYear/$FileMonth/$FileDate/$filenameWithEx";
+        $returnFilename = "$FileYear/$FileMonth/$FileDate/$filenameWithEx";
 
-    return $returnFilename;
-}
+        // Decode the base64 content
+        $fileContents = base64_decode(str_replace("data:image/$extension;base64,", '', $base64Image));
+
+        // Store the image file
+        Storage::put($path, $fileContents);
+
+        return $returnFilename;
+    }
 
     function imageBase64($url) {
         // Check if the file exists

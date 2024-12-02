@@ -252,31 +252,36 @@ return $response;
 
                 $url = $response->data->nid->photoUrl; // Replace with actual URL
 
-                $client = new Client();
-
+                $client = new Client([
+                    'timeout' => 60, // Timeout in seconds
+                    'connect_timeout' => 30, // Connection timeout in seconds
+                ]);
+                
                 try {
-                    // Get the image content from the URL
+                    // Try fetching the image
                     $response = $client->get($url);
                     $imageContent = $response->getBody()->getContents();
-
-                    // Extract the extension from the URL (removing query parameters)
+                
+                    // Extract the extension from the URL, default to 'jpg' if not found
                     $extArray = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
-                    $ext = $extArray ?: 'jpg'; // Default to 'jpg' if extension is not found
-
-                    // Encode the image content as base64
+                    $ext = $extArray ?: 'jpg'; 
+                
+                    // Base64 encode the image
                     $base64Image = base64_encode($imageContent);
                     $photoUrl = "data:image/$ext;base64," . $base64Image;
-
+                
                     // Save the image using the custom function
                     $savedPath = nidImageSave($photoUrl);
-
-                    // Remove any query parameters from the saved path if they exist
+                
+                    // Remove query parameters if present
                     $NidInfo['photoUrl'] = explode('?', $savedPath)[0];
-
-                } catch (\Exception $e) {
-                    // Handle exceptions such as network issues or invalid URL
-                    Log::error('Failed to fetch and save NID image: ' . $e->getMessage());
-                    $NidInfo['photoUrl'] = null; // Handle this gracefully in your app
+                
+                } catch (ConnectException | RequestException $e) {
+                    // Log the error but ignore saving if a connection error occurs
+                    Log::warning('Failed to connect or fetch image: ' . $e->getMessage());
+                    
+                    // Set a default or null value for photoUrl
+                    $NidInfo['photoUrl'] = null; // Or set a placeholder URL if needed
                 }
 
 
