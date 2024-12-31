@@ -2,11 +2,12 @@
 <?php
 
 use App\Models\User;
+use GuzzleHttp\Client;
 use App\Models\ApiToken;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use GuzzleHttp\Client;
 function apiLogin($email,$password,$token){
 
 
@@ -67,35 +68,53 @@ return $data = [
         $apitoken->update(['use'=>1]);
     }
 
-    function nidImageSave($url){
-
-
+   // Function to save base64 image to storage
+    function nidImageSave($base64Image) {
         $FileYear = date('Y');
         $FileMonth = date('m');
         $FileDate = date('d');
         $randomString = Str::random(10);
-        $extension = pathinfo($url, PATHINFO_EXTENSION);
-        if(!$extension){
-            $extension = 'jpg';
-        }
-        $filenameWithEx = time() . '_' . $randomString . '.' . $extension;
-        $filename = "public/$FileYear/$FileMonth/$FileDate/$filenameWithEx";
 
+        // Extract the extension from the base64 URL
+        preg_match('/data:image\/(.*?);base64/', $base64Image, $matches);
+        $extension = $matches[1] ?? 'jpg';
+
+        $filenameWithEx = time() . '_' . $randomString . '.' . $extension;
+        $path = "public/$FileYear/$FileMonth/$FileDate/$filenameWithEx";
         $returnFilename = "$FileYear/$FileMonth/$FileDate/$filenameWithEx";
 
-        $fileContents = file_get_contents($url);
-         Storage::disk('local')->put($filename, $fileContents);
-         return $returnFilename;
+        // Decode the base64 content
+        $fileContents = base64_decode(str_replace("data:image/$extension;base64,", '', $base64Image));
+
+        // Store the image file
+        Storage::put($path, $fileContents);
+
+        return $returnFilename;
     }
 
-    function imageBase64($url){
+    function imageBase64($url) {
+        // Check if the file exists
+        if (!file_exists($url)) {
+            // Return a default placeholder or null if the file doesn't exist
+            return null;
+        }
 
-        $imageContent = file_get_contents($url);
+        // Attempt to get the file contents
+        try {
+            $imageContent = file_get_contents($url);
+        } catch (Exception $e) {
+            // Log the error or return null if an exception occurs
+            Log::error("Failed to open stream for $url: " . $e->getMessage());
+            return null;
+        }
 
-$extension = pathinfo($url, PATHINFO_EXTENSION);
-$base64Image = base64_encode($imageContent);
+        // Get the file extension
+        $extension = pathinfo($url, PATHINFO_EXTENSION);
 
+        // Encode the image in base64
+        $base64Image = base64_encode($imageContent);
 
-return $base64Url = "data:image/$extension;base64," . $base64Image;
-
+        // Return the base64 image URL
+        return "data:image/$extension;base64," . $base64Image;
     }
+
