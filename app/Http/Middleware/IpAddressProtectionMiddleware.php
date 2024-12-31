@@ -9,9 +9,11 @@ class IpAddressProtectionMiddleware
 
 
     protected $allowedIPs = [
-        // '',
+        '',
         'https://msronytraders.com',
         'http://test.localhost:8000',
+        'http://test.localhost:5173',
+        'http://localhost:5173',
         'https://bornomala.online',
         //uniontax.gov.bd
         'https://alowakhowa.uniontax.gov.bd',
