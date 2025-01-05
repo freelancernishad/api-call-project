@@ -118,3 +118,13 @@ return $data = [
         return "data:image/$extension;base64," . $base64Image;
     }
 
+
+
+
+
+
+
+
+
+
+
