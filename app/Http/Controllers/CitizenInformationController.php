@@ -142,6 +142,15 @@ return $response;
             curl_close($curl);
             $response = json_decode($response);
             Log::info($response);
+            if($response=='The API server is not available at the moment. Please try again later.'){
+                $responseData = [
+                    'informations'=>[],
+                    'type'=>'NID',
+                    'message'=>'not-found',
+                    'status'=>404,
+                  ];
+                  return $responseData;
+            }
 
             if($response->status=='NO'){
                 $responseData = [
