@@ -140,8 +140,8 @@ return $response;
               ));
             $response = curl_exec($curl);
             curl_close($curl);
-            Log::info($response);
             $response = json_decode($response);
+            Log::info($response);
 
             if($response->status=='NO'){
                 $responseData = [
