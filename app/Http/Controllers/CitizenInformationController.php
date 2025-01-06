@@ -44,34 +44,34 @@ return $response;
     {
         $token = $request->sToken;
         $loginStatus = apiLogin('freelancernishad123@gmail.com', '12345678', $token);
-
+    
         if ($loginStatus['status'] != 200) {
             return $loginStatus;
         }
-
+    
         $nationalIdNumber = $request->nidNumber;
         $dateOfBirth = date('Y-m-d', strtotime($request->dateOfBirth));
-
+    
         // Check if the citizen information already exists in the database
         $Oldidcheck = CitizenInformation::where(['oldNationalIdNumber' => $nationalIdNumber, 'dateOfBirth' => $dateOfBirth])->count();
         $idcheck = CitizenInformation::where(['nationalIdNumber' => $nationalIdNumber, 'dateOfBirth' => $dateOfBirth])->count();
-
+    
         if ($Oldidcheck > 0 || $idcheck > 0) {
             // Fetch existing citizen information
             $informations = CitizenInformation::where(['nationalIdNumber' => $nationalIdNumber, 'dateOfBirth' => $dateOfBirth])
                 ->orWhere(['oldNationalIdNumber' => $nationalIdNumber, 'dateOfBirth' => $dateOfBirth])
                 ->first();
-
+    
             // Parse address arrays from the request or external API
             $presentAddressENArray = explode(", ", $request->presentAddressEN ?? '');
             $presentAddressBNArray = explode(", ", $request->presentAddressBN ?? '');
             $permanentAddressENArray = explode(", ", $request->permanentAddressEN ?? '');
             $permanentAddressBNArray = explode(", ", $request->permanentAddressBN ?? '');
-
+    
             // Update or create present and permanent addresses
             $informations = $this->updateOrCreatePresentAddress($informations, $presentAddressENArray, $presentAddressBNArray);
             $informations = $this->updateOrCreatePermanentAddress($informations, $permanentAddressENArray, $permanentAddressBNArray);
-
+    
             // Prepare response
             $informations['photoUrl'] = imageBase64('storage/app/public/' . $informations->photoUrl);
             $responseData = [
@@ -82,14 +82,14 @@ return $response;
             ];
             return $responseData;
         }
-
+    
         // If citizen information does not exist, fetch from external API
         $requestBody = '{
             "nidNumber": "' . $nationalIdNumber . '",
             "dateOfBirth": "' . $dateOfBirth . '",
             "englishTranslation": true
         }';
-
+    
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL => 'https://api.porichoybd.com/api/v2/verifications/autofill',
@@ -106,13 +106,13 @@ return $response;
                 'x-api-key: c4cc8c32-161c-496c-adfb-16eeed4607ad'
             ],
         ]);
-
+    
         $response = curl_exec($curl);
         curl_close($curl);
         $response = json_decode($response);
-
+    
         Log::info($response);
-
+    
         if ($response == 'The API server is not available at the moment. Please try again later.' || $response->status == 'NO') {
             $responseData = [
                 'informations' => [],
@@ -122,29 +122,29 @@ return $response;
             ];
             return $responseData;
         }
-
+    
         // Create new citizen information
         $NidInfo = (array)$response->data->nid;
         $NidInfo['dateOfBirth'] = $dateOfBirth;
         $CitizenInformation = CitizenInformation::create($NidInfo);
-
+    
         // Parse address arrays from the API response
         $presentAddressENArray = explode(", ", $response->data->nid->presentAddressEN ?? '');
         $presentAddressBNArray = explode(", ", $response->data->nid->presentAddressBN ?? '');
         $permanentAddressENArray = explode(", ", $response->data->nid->permanentAddressEN ?? '');
         $permanentAddressBNArray = explode(", ", $response->data->nid->permanentAddressBN ?? '');
-
+    
         // Update or create present and permanent addresses
         $CitizenInformation = $this->updateOrCreatePresentAddress($CitizenInformation, $presentAddressENArray, $presentAddressBNArray);
         $CitizenInformation = $this->updateOrCreatePermanentAddress($CitizenInformation, $permanentAddressENArray, $permanentAddressBNArray);
-
+    
         // Handle photo URL
         $url = $response->data->nid->photoUrl;
         $client = new Client([
             'timeout' => 60,
             'connect_timeout' => 30,
         ]);
-
+    
         try {
             $response = $client->get($url);
             $imageContent = $response->getBody()->getContents();
@@ -158,9 +158,9 @@ return $response;
             Log::warning('Failed to connect or fetch image: ' . $e->getMessage());
             $CitizenInformation->photoUrl = null;
         }
-
+    
         $CitizenInformation->save();
-
+    
         // Prepare response
         $CitizenInformation['photoUrl'] = imageBase64('storage/app/public/' . $CitizenInformation->photoUrl);
         $responseData = [
@@ -171,81 +171,153 @@ return $response;
         ];
         return $responseData;
     }
-
+    
     // Helper function to update or create present address
     protected function updateOrCreatePresentAddress($informations, $presentAddressENArray, $presentAddressBNArray)
     {
-        if (!empty($presentAddressENArray)) {
+        $presentAddressENArrayCount = count($presentAddressENArray);
+        $presentAddressBNArrayCount = count($presentAddressBNArray);
+    
+        // Update present address (English)
+        if ($presentAddressENArrayCount > 6) {
             $presentHoldingENArray = explode(':', $presentAddressENArray[0] ?? '');
             $informations->presentHolding_en = $presentHoldingENArray[1] ?? null;
-
             $informations->presentVillage_en = $presentAddressENArray[1] ?? null;
+            $presentPostENArray = explode(':', $presentAddressENArray[4] ?? '');
+            $informations->presentUnion_en = $presentPostENArray[1] ?? null;
+            $presentPostENArray = explode('-', $presentPostENArray[1] ?? '');
+            $informations->presentPost_en = ltrim($presentPostENArray[0] ?? '');
+            $informations->presentPostCode_en = $presentPostENArray[1] ?? null;
+            $informations->presentThana_en = $presentAddressENArray[5] ?? null;
+            $informations->presentDistrict_en = $presentAddressENArray[6] ?? null;
+        } elseif ($presentAddressENArrayCount > 5) {
+            $presentHoldingENArray = explode(':', $presentAddressENArray[0] ?? '');
+            $informations->presentHolding_en = $presentHoldingENArray[1] ?? null;
+            $presentVillageENArray = explode(':', $presentAddressENArray[1] ?? '');
+            $informations->presentVillage_en = $presentVillageENArray[1] ?? null;
             $informations->presentUnion_en = $presentAddressENArray[2] ?? null;
-
             $presentPostENArray = explode(':', $presentAddressENArray[3] ?? '');
             $presentPostENArray = explode('-', $presentPostENArray[1] ?? '');
             $informations->presentPost_en = ltrim($presentPostENArray[0] ?? '');
             $informations->presentPostCode_en = $presentPostENArray[1] ?? null;
-
             $informations->presentThana_en = $presentAddressENArray[4] ?? null;
             $informations->presentDistrict_en = $presentAddressENArray[5] ?? null;
         }
-
-        if (!empty($presentAddressBNArray)) {
+    
+        // Update present address (Bangla)
+        if ($presentAddressBNArrayCount > 6) {
             $presentHoldingArray = explode(':', $presentAddressBNArray[0] ?? '');
             $informations->presentHolding = $presentHoldingArray[1] ?? null;
-
             $informations->presentVillage = $presentAddressBNArray[1] ?? null;
+            $presentPostArray = explode(':', $presentAddressBNArray[4] ?? '');
+            $informations->presentUnion = $presentPostArray[1] ?? null;
+            $presentPostArray = explode('-', $presentPostArray[1] ?? '');
+            $informations->presentPost = ltrim($presentPostArray[0] ?? '');
+            $informations->presentPostCode = $presentPostArray[1] ?? null;
+            $informations->presentThana = $presentAddressBNArray[5] ?? null;
+            $informations->presentDistrict = $presentAddressBNArray[6] ?? null;
+        } elseif ($presentAddressBNArrayCount > 5) {
+            $presentHoldingArray = explode(':', $presentAddressBNArray[0] ?? '');
+            $informations->presentHolding = $presentHoldingArray[1] ?? null;
+            $presentVillageArray = explode(':', $presentAddressBNArray[1] ?? '');
+            $informations->presentVillage = $presentVillageArray[1] ?? null;
             $informations->presentUnion = $presentAddressBNArray[2] ?? null;
-
             $presentPostArray = explode(':', $presentAddressBNArray[3] ?? '');
             $presentPostArray = explode('-', $presentPostArray[1] ?? '');
             $informations->presentPost = ltrim($presentPostArray[0] ?? '');
             $informations->presentPostCode = $presentPostArray[1] ?? null;
-
             $informations->presentThana = $presentAddressBNArray[4] ?? null;
             $informations->presentDistrict = $presentAddressBNArray[5] ?? null;
         }
-
+    
         $informations->save();
         return $informations;
     }
-
+    
     // Helper function to update or create permanent address
     protected function updateOrCreatePermanentAddress($informations, $permanentAddressENArray, $permanentAddressBNArray)
     {
-        if (!empty($permanentAddressENArray)) {
+        $permanentAddressENArrayCount = count($permanentAddressENArray);
+        $permanentAddressBNArrayCount = count($permanentAddressBNArray);
+    
+        // Update permanent address (English)
+        if ($permanentAddressENArrayCount > 8) {
             $permanentHoldingENArray = explode(':', $permanentAddressENArray[0] ?? '');
             $informations->permanentHolding_en = $permanentHoldingENArray[1] ?? null;
-
-            $informations->permanentVillage_en = $permanentAddressENArray[1] ?? null;
+            $permanentVillageENArray = explode(':', $permanentAddressENArray[2] ?? '');
+            $informations->permanentVillage_en = $permanentVillageENArray[1] ?? null;
+            $informations->permanentUnion_en = $permanentAddressENArray[4] ?? null;
+            $permanentPostENArray = explode(':', $permanentAddressENArray[6] ?? '');
+            $permanentPostENArray = explode('-', $permanentPostENArray[1] ?? '');
+            $informations->permanentPost_en = ltrim($permanentPostENArray[0] ?? '');
+            $informations->permanentPostCode_en = $permanentPostENArray[1] ?? null;
+            $informations->permanentThana_en = $permanentAddressENArray[7] ?? null;
+            $informations->permanentDistrict_en = $permanentAddressENArray[8] ?? null;
+        } elseif ($permanentAddressENArrayCount > 6) {
+            $permanentHoldingENArray = explode(':', $permanentAddressENArray[0] ?? '');
+            $informations->permanentHolding_en = $permanentHoldingENArray[1] ?? null;
+            $permanentVillageENArray = explode(':', $permanentAddressENArray[1] ?? '');
+            $informations->permanentVillage_en = $permanentVillageENArray[1] ?? null;
             $informations->permanentUnion_en = $permanentAddressENArray[2] ?? null;
-
+            $permanentPostENArray = explode(':', $permanentAddressENArray[4] ?? '');
+            $permanentPostENArray = explode('-', $permanentPostENArray[1] ?? '');
+            $informations->permanentPost_en = ltrim($permanentPostENArray[0] ?? '');
+            $informations->permanentPostCode_en = $permanentPostENArray[1] ?? null;
+            $informations->permanentThana_en = $permanentAddressENArray[5] ?? null;
+            $informations->permanentDistrict_en = $permanentAddressENArray[6] ?? null;
+        } elseif ($permanentAddressENArrayCount > 5) {
+            $permanentHoldingENArray = explode(':', $permanentAddressENArray[0] ?? '');
+            $informations->permanentHolding_en = $permanentHoldingENArray[1] ?? null;
+            $permanentVillageENArray = explode(':', $permanentAddressENArray[1] ?? '');
+            $informations->permanentVillage_en = $permanentVillageENArray[1] ?? null;
+            $informations->permanentUnion_en = $permanentAddressENArray[2] ?? null;
             $permanentPostENArray = explode(':', $permanentAddressENArray[3] ?? '');
             $permanentPostENArray = explode('-', $permanentPostENArray[1] ?? '');
             $informations->permanentPost_en = ltrim($permanentPostENArray[0] ?? '');
             $informations->permanentPostCode_en = $permanentPostENArray[1] ?? null;
-
             $informations->permanentThana_en = $permanentAddressENArray[4] ?? null;
             $informations->permanentDistrict_en = $permanentAddressENArray[5] ?? null;
         }
-
-        if (!empty($permanentAddressBNArray)) {
+    
+        // Update permanent address (Bangla)
+        if ($permanentAddressBNArrayCount > 8) {
             $permanentHoldingArray = explode(':', $permanentAddressBNArray[0] ?? '');
             $informations->permanentHolding = $permanentHoldingArray[1] ?? null;
-
-            $informations->permanentVillage = $permanentAddressBNArray[1] ?? null;
+            $permanentVillageArray = explode(':', $permanentAddressBNArray[2] ?? '');
+            $informations->permanentVillage = $permanentVillageArray[1] ?? null;
+            $informations->permanentUnion = $permanentAddressBNArray[4] ?? null;
+            $permanentPostArray = explode(':', $permanentAddressBNArray[6] ?? '');
+            $permanentPostArray = explode('-', $permanentPostArray[1] ?? '');
+            $informations->permanentPost = ltrim($permanentPostArray[0] ?? '');
+            $informations->permanentPostCode = $permanentPostArray[1] ?? null;
+            $informations->permanentThana = $permanentAddressBNArray[7] ?? null;
+            $informations->permanentDistrict = $permanentAddressBNArray[8] ?? null;
+        } elseif ($permanentAddressBNArrayCount > 6) {
+            $permanentHoldingArray = explode(':', $permanentAddressBNArray[0] ?? '');
+            $informations->permanentHolding = $permanentHoldingArray[1] ?? null;
+            $permanentVillageArray = explode(':', $permanentAddressBNArray[1] ?? '');
+            $informations->permanentVillage = $permanentVillageArray[1] ?? null;
             $informations->permanentUnion = $permanentAddressBNArray[2] ?? null;
-
+            $permanentPostArray = explode(':', $permanentAddressBNArray[4] ?? '');
+            $permanentPostArray = explode('-', $permanentPostArray[1] ?? '');
+            $informations->permanentPost = ltrim($permanentPostArray[0] ?? '');
+            $informations->permanentPostCode = $permanentPostArray[1] ?? null;
+            $informations->permanentThana = $permanentAddressBNArray[5] ?? null;
+            $informations->permanentDistrict = $permanentAddressBNArray[6] ?? null;
+        } elseif ($permanentAddressBNArrayCount > 5) {
+            $permanentHoldingArray = explode(':', $permanentAddressBNArray[0] ?? '');
+            $informations->permanentHolding = $permanentHoldingArray[1] ?? null;
+            $permanentVillageArray = explode(':', $permanentAddressBNArray[1] ?? '');
+            $informations->permanentVillage = $permanentVillageArray[1] ?? null;
+            $informations->permanentUnion = $permanentAddressBNArray[2] ?? null;
             $permanentPostArray = explode(':', $permanentAddressBNArray[3] ?? '');
             $permanentPostArray = explode('-', $permanentPostArray[1] ?? '');
             $informations->permanentPost = ltrim($permanentPostArray[0] ?? '');
             $informations->permanentPostCode = $permanentPostArray[1] ?? null;
-
             $informations->permanentThana = $permanentAddressBNArray[4] ?? null;
             $informations->permanentDistrict = $permanentAddressBNArray[5] ?? null;
         }
-
+    
         $informations->save();
         return $informations;
     }
