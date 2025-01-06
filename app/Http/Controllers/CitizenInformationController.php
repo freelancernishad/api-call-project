@@ -44,34 +44,35 @@ return $response;
     {
         $token = $request->sToken;
         $loginStatus = apiLogin('freelancernishad123@gmail.com', '12345678', $token);
-    
+
         if ($loginStatus['status'] != 200) {
             return $loginStatus;
         }
-    
+
         $nationalIdNumber = $request->nidNumber;
         $dateOfBirth = date('Y-m-d', strtotime($request->dateOfBirth));
-    
+
         // Check if the citizen information already exists in the database
         $Oldidcheck = CitizenInformation::where(['oldNationalIdNumber' => $nationalIdNumber, 'dateOfBirth' => $dateOfBirth])->count();
         $idcheck = CitizenInformation::where(['nationalIdNumber' => $nationalIdNumber, 'dateOfBirth' => $dateOfBirth])->count();
-    
+
         if ($Oldidcheck > 0 || $idcheck > 0) {
             // Fetch existing citizen information
             $informations = CitizenInformation::where(['nationalIdNumber' => $nationalIdNumber, 'dateOfBirth' => $dateOfBirth])
                 ->orWhere(['oldNationalIdNumber' => $nationalIdNumber, 'dateOfBirth' => $dateOfBirth])
                 ->first();
-    
+
+
             // Parse address arrays from the request or external API
-            $presentAddressENArray = explode(", ", $request->presentAddressEN ?? '');
-            $presentAddressBNArray = explode(", ", $request->presentAddressBN ?? '');
-            $permanentAddressENArray = explode(", ", $request->permanentAddressEN ?? '');
-            $permanentAddressBNArray = explode(", ", $request->permanentAddressBN ?? '');
-    
+            $presentAddressENArray = explode(", ", $informations->presentAddressEN ?? '');
+            $presentAddressBNArray = explode(", ", $informations->presentAddressBN ?? '');
+            $permanentAddressENArray = explode(", ", $informations->permenantAddressEN ?? '');
+            $permanentAddressBNArray = explode(", ", $informations->permanentAddressBN ?? '');
+
             // Update or create present and permanent addresses
             $informations = $this->updateOrCreatePresentAddress($informations, $presentAddressENArray, $presentAddressBNArray);
             $informations = $this->updateOrCreatePermanentAddress($informations, $permanentAddressENArray, $permanentAddressBNArray);
-    
+
             // Prepare response
             $informations['photoUrl'] = imageBase64('storage/app/public/' . $informations->photoUrl);
             $responseData = [
@@ -82,14 +83,14 @@ return $response;
             ];
             return $responseData;
         }
-    
+
         // If citizen information does not exist, fetch from external API
         $requestBody = '{
             "nidNumber": "' . $nationalIdNumber . '",
             "dateOfBirth": "' . $dateOfBirth . '",
             "englishTranslation": true
         }';
-    
+
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL => 'https://api.porichoybd.com/api/v2/verifications/autofill',
@@ -106,13 +107,13 @@ return $response;
                 'x-api-key: c4cc8c32-161c-496c-adfb-16eeed4607ad'
             ],
         ]);
-    
+
         $response = curl_exec($curl);
         curl_close($curl);
         $response = json_decode($response);
-    
+
         Log::info($response);
-    
+
         if ($response == 'The API server is not available at the moment. Please try again later.' || $response->status == 'NO') {
             $responseData = [
                 'informations' => [],
@@ -122,29 +123,30 @@ return $response;
             ];
             return $responseData;
         }
-    
+
         // Create new citizen information
         $NidInfo = (array)$response->data->nid;
         $NidInfo['dateOfBirth'] = $dateOfBirth;
         $CitizenInformation = CitizenInformation::create($NidInfo);
-    
+
         // Parse address arrays from the API response
         $presentAddressENArray = explode(", ", $response->data->nid->presentAddressEN ?? '');
         $presentAddressBNArray = explode(", ", $response->data->nid->presentAddressBN ?? '');
         $permanentAddressENArray = explode(", ", $response->data->nid->permanentAddressEN ?? '');
         $permanentAddressBNArray = explode(", ", $response->data->nid->permanentAddressBN ?? '');
-    
+
+
         // Update or create present and permanent addresses
         $CitizenInformation = $this->updateOrCreatePresentAddress($CitizenInformation, $presentAddressENArray, $presentAddressBNArray);
         $CitizenInformation = $this->updateOrCreatePermanentAddress($CitizenInformation, $permanentAddressENArray, $permanentAddressBNArray);
-    
+
         // Handle photo URL
         $url = $response->data->nid->photoUrl;
         $client = new Client([
             'timeout' => 60,
             'connect_timeout' => 30,
         ]);
-    
+
         try {
             $response = $client->get($url);
             $imageContent = $response->getBody()->getContents();
@@ -158,9 +160,9 @@ return $response;
             Log::warning('Failed to connect or fetch image: ' . $e->getMessage());
             $CitizenInformation->photoUrl = null;
         }
-    
+
         $CitizenInformation->save();
-    
+
         // Prepare response
         $CitizenInformation['photoUrl'] = imageBase64('storage/app/public/' . $CitizenInformation->photoUrl);
         $responseData = [
@@ -171,13 +173,18 @@ return $response;
         ];
         return $responseData;
     }
-    
+
     // Helper function to update or create present address
     protected function updateOrCreatePresentAddress($informations, $presentAddressENArray, $presentAddressBNArray)
     {
+
+          Log::info($informations);
+             Log::info($presentAddressENArray);
+                Log::info($presentAddressBNArray);
+
         $presentAddressENArrayCount = count($presentAddressENArray);
         $presentAddressBNArrayCount = count($presentAddressBNArray);
-    
+
         // Update present address (English)
         if ($presentAddressENArrayCount > 6) {
             $presentHoldingENArray = explode(':', $presentAddressENArray[0] ?? '');
@@ -203,7 +210,7 @@ return $response;
             $informations->presentThana_en = $presentAddressENArray[4] ?? null;
             $informations->presentDistrict_en = $presentAddressENArray[5] ?? null;
         }
-    
+
         // Update present address (Bangla)
         if ($presentAddressBNArrayCount > 6) {
             $presentHoldingArray = explode(':', $presentAddressBNArray[0] ?? '');
@@ -229,17 +236,17 @@ return $response;
             $informations->presentThana = $presentAddressBNArray[4] ?? null;
             $informations->presentDistrict = $presentAddressBNArray[5] ?? null;
         }
-    
+
         $informations->save();
         return $informations;
     }
-    
+
     // Helper function to update or create permanent address
     protected function updateOrCreatePermanentAddress($informations, $permanentAddressENArray, $permanentAddressBNArray)
     {
         $permanentAddressENArrayCount = count($permanentAddressENArray);
         $permanentAddressBNArrayCount = count($permanentAddressBNArray);
-    
+
         // Update permanent address (English)
         if ($permanentAddressENArrayCount > 8) {
             $permanentHoldingENArray = explode(':', $permanentAddressENArray[0] ?? '');
@@ -278,7 +285,7 @@ return $response;
             $informations->permanentThana_en = $permanentAddressENArray[4] ?? null;
             $informations->permanentDistrict_en = $permanentAddressENArray[5] ?? null;
         }
-    
+
         // Update permanent address (Bangla)
         if ($permanentAddressBNArrayCount > 8) {
             $permanentHoldingArray = explode(':', $permanentAddressBNArray[0] ?? '');
@@ -317,7 +324,7 @@ return $response;
             $informations->permanentThana = $permanentAddressBNArray[4] ?? null;
             $informations->permanentDistrict = $permanentAddressBNArray[5] ?? null;
         }
-    
+
         $informations->save();
         return $informations;
     }
