@@ -66,6 +66,7 @@ class IpAddressProtectionMiddleware
         'https://toria.uniontax.gov.bd',
         'https://tungibaria.uniontax.gov.bd',
         'https://test.uniontax.gov.bd',
+        'https://api.uniontax.gov.bd',
         //pouroseba.gov.bd
         'https://boda.pouroseba.gov.bd',
         'https://debiganj.pouroseba.gov.bd',
